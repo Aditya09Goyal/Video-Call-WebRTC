@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 let connections = {}
 let messages = {}
 let timeOnline = {}
+let names = {}
 
 export const connectToSocket = (server) => {
     const io = new Server(server, { // this is to handle error related to CORS policy as the error will occur to the IO and not the express server
@@ -14,15 +15,23 @@ export const connectToSocket = (server) => {
         }
     });
 
+    const sendParticipants = (path) => {
+        if (connections[path] === undefined) return;
+        const list = connections[path].map((id) => ({ id: id, name: names[id] || "Guest" }));
+        connections[path].forEach((id) => io.to(id).emit("participants", list));
+    }
+
     io.on("connection", (socket) => {
 
         console.log("something connected");
 
-        socket.on("join-call", (path) => {
+        socket.on("join-call", (path, name) => {
             if (connections[path] === undefined) {
                 connections[path] = []
             }
             connections[path].push(socket.id)
+
+            names[socket.id] = String(name || "Guest").trim().slice(0, 40) || "Guest";
 
             timeOnline[socket.id] = Date.now();
 
@@ -32,9 +41,11 @@ export const connectToSocket = (server) => {
 
             if (messages[path] !== undefined) {
                 for (let b = 0; b < messages[path].length; b++) {
-                    socket.emit("chat-message", messages[path][b]['data'], messages[path][b]['sender']), messages[path][b]['socket-id-sender'];
+                    socket.emit("chat-message", messages[path][b]['data'], messages[path][b]['sender'], messages[path][b]['socket-id-sender']);
                 }
             }
+
+            sendParticipants(path);
 
         })
 
@@ -83,9 +94,14 @@ export const connectToSocket = (server) => {
                     connections[key].splice(index, 1);
                     if (connections[key].length === 0) {
                         delete connections[key];
+                    } else {
+                        sendParticipants(key);
                     }
                 }
             }
+
+            delete names[socket.id];
+            delete timeOnline[socket.id];
         })
     })
 

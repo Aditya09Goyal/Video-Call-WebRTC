@@ -12,6 +12,7 @@ import ScreenShare from '@mui/icons-material/ScreenShareTwoTone';
 import ScreenShareOff from '@mui/icons-material/StopScreenShareTwoTone';
 import ChatIcon from '@mui/icons-material/Chat';
 import PersonIcon from '@mui/icons-material/Person';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import '../App.css';
@@ -70,6 +71,8 @@ export default function VideoMeetComponent() {
     let [askForUsername, setaskForUsername] = useState(true); // for guest mode login
     let [username, setUsername] = useState(""); // for guest mode
     let [videos, setVideos] = useState([]);
+    let [participants, setParticipants] = useState([]);
+    let [showPeople, setShowPeople] = useState(false);
 
     // TODO
     // if (isChrome() === false) {
@@ -254,8 +257,10 @@ export default function VideoMeetComponent() {
 
         socketRef.current.on("signal", gotMessageFromServer);
 
+        socketRef.current.on("participants", (list) => setParticipants(list));
+
         socketRef.current.on("connect", () => {
-            socketRef.current.emit("join-call", window.location.href);
+            socketRef.current.emit("join-call", window.location.href, username || "Guest");
 
             socketIdRef.current = socketRef.current.id;
 
@@ -263,6 +268,10 @@ export default function VideoMeetComponent() {
 
             socketRef.current.on("user-left", (id) => {
                 setVideos((videos) => videos.filter((video) => video.socketId !== id));
+                if (connections[id]) {
+                    try { connections[id].close(); } catch (e) { }
+                    delete connections[id];
+                }
             });
 
             socketRef.current.on("user-joined", (id, clients) => {
@@ -630,6 +639,70 @@ export default function VideoMeetComponent() {
                         </div>
                     </div> : <></>}
 
+                    {showPeople ? <div className={styles.chatRoom}>
+                        <div className={styles.chatContainer}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '18px 24px 14px',
+                                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                flexShrink: 0,
+                            }}>
+                                <h1 style={{
+                                    margin: 0,
+                                    fontSize: '1.3rem',
+                                    fontWeight: 700,
+                                    color: '#fff',
+                                    padding: 0,
+                                    border: 'none',
+                                }}>Participants ({participants.length})</h1>
+                                <IconButton
+                                    onClick={() => { setShowPeople(false); }}
+                                    sx={{
+                                        color: 'rgba(255,255,255,0.5)',
+                                        '&:hover': { color: '#ff5e62', background: 'rgba(255,94,98,0.1)' },
+                                    }}
+                                    size="small"
+                                >
+                                    <CloseRoundedIcon />
+                                </IconButton>
+                            </div>
+
+                            <div className={styles.chattingDisplay}>
+                                {participants.map((p) => (
+                                    <div key={p.id} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '10px 14px',
+                                        background: 'rgba(255,255,255,0.04)',
+                                        borderRadius: '12px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                    }}>
+                                        <div style={{
+                                            width: '34px',
+                                            height: '34px',
+                                            borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #FF9839, #ff5e62)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#fff',
+                                            fontWeight: 700,
+                                            flexShrink: 0,
+                                        }}>{p.name.charAt(0).toUpperCase()}</div>
+                                        <p style={{
+                                            margin: 0,
+                                            fontSize: '0.95rem',
+                                            color: 'rgba(255,255,255,0.85)',
+                                        }}>{p.name}{p.id === socketIdRef.current ? ' (You)' : ''}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div> : <></>}
+
 
                     <div className={styles.buttonContainers}>
                         <IconButton
@@ -698,6 +771,36 @@ export default function VideoMeetComponent() {
                             </IconButton> : <></>}
 
                         <Badge
+                            badgeContent={participants.length}
+                            sx={{
+                                '& .MuiBadge-badge': {
+                                    background: 'rgba(255,255,255,0.9)',
+                                    color: '#14141c',
+                                    fontWeight: 700,
+                                    fontSize: '0.7rem',
+                                    minWidth: '20px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                },
+                            }}
+                        >
+                            <IconButton
+                                onClick={() => { setShowPeople(!showPeople); setModal(false); }}
+                                sx={{
+                                    color: showPeople ? '#FF9839' : '#fff',
+                                    background: showPeople ? 'rgba(255,152,57,0.15)' : 'rgba(255,255,255,0.08)',
+                                    borderRadius: '14px',
+                                    width: '52px',
+                                    height: '52px',
+                                    transition: 'all 0.2s ease',
+                                    '&:hover': { background: showPeople ? 'rgba(255,152,57,0.25)' : 'rgba(255,255,255,0.14)' },
+                                }}
+                            >
+                                <PeopleAltIcon />
+                            </IconButton>
+                        </Badge>
+
+                        <Badge
                             badgeContent={newMessages}
                             max={99}
                             sx={{
@@ -714,7 +817,7 @@ export default function VideoMeetComponent() {
                             }}
                         >
                             <IconButton
-                                onClick={() => { setModal(!showModal); setNewMessages(0); }}
+                                onClick={() => { setModal(!showModal); setShowPeople(false); setNewMessages(0); }}
                                 sx={{
                                     color: showModal ? '#FF9839' : '#fff',
                                     background: showModal ? 'rgba(255,152,57,0.15)' : 'rgba(255,255,255,0.08)',
@@ -734,7 +837,7 @@ export default function VideoMeetComponent() {
                     <div className={styles.conferenceView}>
                         {videos.map((video) => (
 
-                            <div key={video.socketId}>
+                            <div key={video.socketId} style={{ position: 'relative' }}>
 
                                 <video
                                     data-socket={video.socketId}
@@ -743,6 +846,17 @@ export default function VideoMeetComponent() {
                                             ref.srcObject = video.stream;
                                         }
                                     }} autoPlay></video>
+                                <span style={{
+                                    position: 'absolute',
+                                    left: '12px',
+                                    bottom: '12px',
+                                    padding: '4px 10px',
+                                    borderRadius: '8px',
+                                    background: 'rgba(0,0,0,0.55)',
+                                    color: '#fff',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                }}>{(participants.find((p) => p.id === video.socketId) || {}).name || 'Guest'}</span>
                             </div>
 
                         ))}
