@@ -22,11 +22,31 @@ const server_url = server;
 var connections = {};
 
 const peerConfigConnections = {
-    "iceServers": [
-        {
-            "urls": "stun:stun.l.google.com:19302"
-        }
-    ]
+    iceServers: [
+    {
+      urls: "stun:stun.relay.metered.ca:80",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80",
+      username: "77d1bf14585a2d859a33baef",
+      credential: "phqGq0vOmaBFF89O",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80?transport=tcp",
+      username: "77d1bf14585a2d859a33baef",
+      credential: "phqGq0vOmaBFF89O",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:443",
+      username: "77d1bf14585a2d859a33baef",
+      credential: "phqGq0vOmaBFF89O",
+    },
+    {
+      urls: "turns:global.relay.metered.ca:443?transport=tcp",
+      username: "77d1bf14585a2d859a33baef",
+      credential: "phqGq0vOmaBFF89O",
+    },
+  ],
 }
 
 export default function VideoMeetComponent() {
@@ -247,8 +267,9 @@ export default function VideoMeetComponent() {
 
             socketRef.current.on("user-joined", (id, clients) => {
                 clients.forEach((socketListId) => {
+                    if (connections[socketListId]) return;
                     connections[socketListId] = new RTCPeerConnection(peerConfigConnections);
-
+                    
                     connections[socketListId].onicecandidate = (event) => { // it is to establish a direct connection between the two peers
                         if (event.candidate !== null) {
                             socketRef.current.emit("signal", socketListId, JSON.stringify({ 'ice': event.candidate }));
