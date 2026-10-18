@@ -1,7 +1,14 @@
 import { Server } from "socket.io";
 
-let connections = {}
-let messages = {}
+// ---- limits so one meeting can't fill the server's memory ----
+const MAX_MESSAGE_LENGTH = 1000;   // characters per chat message
+const MAX_MESSAGES_PER_ROOM = 200; // only the latest messages are kept for late joiners
+const MAX_NAME_LENGTH = 40;
+const MAX_ROOM_LENGTH = 100;
+
+let connections = {} // room -> [socketId, ...]
+let messages = {}    // room -> [{ sender, data, socket-id-sender }]
+let roomOf = {}      // socketId -> room   (who is in which meeting)
 let timeOnline = {}
 let names = {}
 
@@ -15,91 +22,84 @@ export const connectToSocket = (server) => {
         }
     });
 
-    const sendParticipants = (path) => {
-        if (connections[path] === undefined) return;
-        const list = connections[path].map((id) => ({ id: id, name: names[id] || "Guest" }));
-        connections[path].forEach((id) => io.to(id).emit("participants", list));
+    const sendParticipants = (room) => {
+        if (connections[room] === undefined) return;
+        const list = connections[room].map((id) => ({ id: id, name: names[id] || "Guest" }));
+        connections[room].forEach((id) => io.to(id).emit("participants", list));
+    }
+
+    // removes a socket from its meeting; when the meeting is empty, its chat is deleted too
+    const leaveRoom = (socketId) => {
+        const room = roomOf[socketId];
+        if (room === undefined) return;
+        delete roomOf[socketId];
+
+        const list = connections[room] || [];
+        const index = list.indexOf(socketId);
+        if (index !== -1) list.splice(index, 1);
+
+        list.forEach((id) => io.to(id).emit("user-left", socketId));
+
+        if (list.length === 0) {
+            delete connections[room];
+            delete messages[room]; // FIX: before, every meeting's chat stayed in memory forever
+        } else {
+            sendParticipants(room);
+        }
     }
 
     io.on("connection", (socket) => {
 
-        console.log("something connected");
-
         socket.on("join-call", (path, name) => {
-            if (connections[path] === undefined) {
-                connections[path] = []
+            const room = String(path || "").trim().slice(0, MAX_ROOM_LENGTH);
+            if (!room) return;
+
+            if (roomOf[socket.id] !== undefined) leaveRoom(socket.id); // one meeting per socket
+
+            if (connections[room] === undefined) {
+                connections[room] = []
             }
-            connections[path].push(socket.id)
+            connections[room].push(socket.id)
+            roomOf[socket.id] = room;
 
-            names[socket.id] = String(name || "Guest").trim().slice(0, 40) || "Guest";
-
+            names[socket.id] = String(name || "Guest").trim().slice(0, MAX_NAME_LENGTH) || "Guest";
             timeOnline[socket.id] = Date.now();
 
-            for (let a = 0; a < connections[path].length; a++) {
-                io.to(connections[path][a]).emit("user-joined", socket.id, connections[path]);
-            }
+            connections[room].forEach((id) => io.to(id).emit("user-joined", socket.id, connections[room]));
 
-            if (messages[path] !== undefined) {
-                for (let b = 0; b < messages[path].length; b++) {
-                    socket.emit("chat-message", messages[path][b]['data'], messages[path][b]['sender'], messages[path][b]['socket-id-sender']);
-                }
-            }
+            (messages[room] || []).forEach((m) => {
+                socket.emit("chat-message", m['data'], m['sender'], m['socket-id-sender']);
+            });
 
-            sendParticipants(path);
-
+            sendParticipants(room);
         })
 
+        // FIX: only forward WebRTC signals between two people in the SAME meeting
         socket.on("signal", (toId, message) => {
+            const room = roomOf[socket.id];
+            if (room === undefined || roomOf[toId] !== room) return;
             io.to(toId).emit("signal", socket.id, message);
         })
 
-        socket.on("chat-message", (data, sender) => {
-            const [matchingRoom, found] = Object.entries(connections).reduce(([room, isFound], [roomKey, roomValue]) => {
+        socket.on("chat-message", (data) => {
+            const room = roomOf[socket.id]; // O(1) lookup instead of scanning every room
+            if (room === undefined) return;
 
-                if (!isFound && roomValue.includes(socket.id)) {
-                    return [roomKey, true];
-                }
+            const text = String(data ?? "").trim().slice(0, MAX_MESSAGE_LENGTH);
+            if (!text) return;
+            const sender = names[socket.id] || "Guest"; // the name the server knows, so it can't be faked
 
-                return [room, isFound];
-            }, ["", false]);
-
-            if (found === true) {
-                if (messages[matchingRoom] === undefined) {
-                    messages[matchingRoom] = []
-                }
-
-                messages[matchingRoom].push({'sender': sender, 'data': data, 'socket-id-sender': socket.id});
-                console.log("message", matchingRoom, ":", sender, data)
-
-                connections[matchingRoom].forEach((elem) => {
-                    io.to(elem).emit("chat-message", data, sender, socket.id);
-                })
+            if (messages[room] === undefined) messages[room] = [];
+            messages[room].push({ 'sender': sender, 'data': text, 'socket-id-sender': socket.id });
+            if (messages[room].length > MAX_MESSAGES_PER_ROOM) {
+                messages[room].splice(0, messages[room].length - MAX_MESSAGES_PER_ROOM);
             }
+
+            connections[room].forEach((id) => io.to(id).emit("chat-message", text, sender, socket.id));
         })
 
         socket.on("disconnect", () => {
-
-            var diffTime = Math.abs(timeOnline[socket.id] - Date.now()); // tells how long user was online in milliseconds
-            var key
-            for (const [k, v] of JSON.parse(JSON.stringify(Object.entries(connections)))) {
-                if (v.includes(socket.id)) {
-                    key = k
-                    
-                    for (let a = 0; a < connections[key].length; a++) {
-                        io.to(connections[key][a]).emit("user-left", socket.id)
-                    }
-
-                    var index = connections[key].indexOf(socket.id);
-
-                    connections[key].splice(index, 1);
-                    if (connections[key].length === 0) {
-                        delete connections[key];
-                    } else {
-                        sendParticipants(key);
-                    }
-                }
-            }
-
+            leaveRoom(socket.id);
             delete names[socket.id];
             delete timeOnline[socket.id];
         })

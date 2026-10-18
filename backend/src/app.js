@@ -2,6 +2,7 @@ import path from "path";
 import express from 'express';
 import { createServer } from  "node:http";
 import dotenv from 'dotenv';
+import dns from 'node:dns';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -10,12 +11,19 @@ const __dirname = dirname(__filename);
 
 dotenv.config({ path: join(__dirname, '../../.env') });
 
+// Optional: on some Windows / campus networks Node's own DNS lookup for MongoDB (SRV record) times out,
+// even though the system DNS works. Put DNS_SERVERS=8.8.8.8,1.1.1.1 in .env to make Node use those.
+if (process.env.DNS_SERVERS) {
+    dns.setServers(process.env.DNS_SERVERS.split(',').map((s) => s.trim()).filter(Boolean));
+}
+
 import { Server } from "socket.io";
 
 import mongoose from 'mongoose';
 import cors from 'cors';
 
 import userRoutes from './routes/users.routes.js';
+import { getIceServers } from './controllers/turn.controller.js';
 
 const app = express();
 
@@ -31,6 +39,7 @@ app.use(express.json({ limit: '40kb' }));
 app.use(express.urlencoded({ limit: '40kb', extended: true }));
 
 app.use("/api/v1/users", userRoutes);
+app.get("/api/v1/ice-servers", getIceServers); // TURN credentials for WebRTC
 
 app.get("/home", (req, res) => {
     return res.json({"hello": "world"});
