@@ -1,594 +1,529 @@
-# 🎥 Real-Time Video Conferencing Application
+<div align="center">
 
-A full-stack, real-time video conferencing application built with **React**, **Node.js**, **WebRTC**, **Socket.IO**, and **MongoDB**. It enables users to register, authenticate, create/join video meetings with multiple participants, share screens, and chat in real time — all within a modern, dark-themed responsive UI.
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,20:ff5e62,40:D4537E,60:7F77DD,80:378ADD,100:1D9E75&height=6&section=header" width="100%" alt=""/>
 
----
+<br/>
 
-## 📑 Table of Contents
+<img src="./assets/hero-command-center.svg" width="100%" alt="How it works: browsers meet through a signaling service, then stream video and audio directly to each other"/>
 
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture Overview](#-architecture-overview)
-- [Project Structure](#-project-structure)
-- [Application Flow](#-application-flow)
-- [WebRTC Signaling Flow](#-webrtc-signaling-flow)
-- [Backend Deep Dive](#-backend-deep-dive)
-- [Frontend Deep Dive](#-frontend-deep-dive)
-- [Database Schema](#-database-schema)
-- [API Endpoints](#-api-endpoints)
-- [Socket.IO Events](#-socketio-events)
-- [Authentication Mechanism](#-authentication-mechanism)
-- [Environment Configuration](#-environment-configuration)
-- [How to Run](#-how-to-run)
-- [Deployment](#-deployment)
-- [Key Concepts & Interview Topics](#-key-concepts--interview-topics)
+<br/><br/>
 
----
+<img src="./assets/demo-stage.svg" width="100%" alt="Animated demo: participants join, chat and share a screen"/>
+
+<br/><br/>
+
+<a href="https://video-call-web-rtc-roan.vercel.app"><img src="https://img.shields.io/badge/%E2%96%B6_LIVE_DEMO-Open_the_app-7F77DD?style=for-the-badge&labelColor=1a1328" alt="Live demo"/></a>
+
+<br/><br/>
+
+<img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
+<img src="https://img.shields.io/badge/Vite_7-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
+<img src="https://img.shields.io/badge/Material_UI_7-007FFF?style=for-the-badge&logo=mui&logoColor=white" alt="MUI"/>
+<img src="https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC"/>
+<img src="https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.IO"/>
+<br/>
+<img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/>
+<img src="https://img.shields.io/badge/Express_5-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express"/>
+<img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/>
+<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel"/>
+<img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render"/>
+
+<br/><br/>
+
+<a href="#features">✨ Features</a> •
+<a href="#numbers">📊 Numbers</a> •
+<a href="#stack">🧰 Stack</a> •
+<a href="#architecture">🏗️ Architecture</a> •
+<a href="#flow">🔄 Flow</a> •
+<a href="#work">🛠️ Work done</a> •
+<a href="#structure">🗂️ Structure</a> •
+<a href="#frontend">⚛️ Frontend</a> •
+<a href="#backend">⚙️ Backend</a> •
+<a href="#tradeoffs">⚖️ Trade-offs</a> •
+<a href="#roadmap">🗺️ Roadmap</a> •
+<a href="#run">🚀 Run it</a>
+
+</div>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,50:D4537E,100:7F77DD&height=3&section=header" width="100%" alt=""/>
+
+> A full-stack, real-time **video conferencing** app: register, create or join a meeting, talk face to face with several people, share your screen and chat — all in the browser, with **video and audio flowing directly between participants** (peer-to-peer) instead of through a media server.
+
+<a id="features"></a>
 
 ## ✨ Features
 
-| Category | Feature |
-|---|---|
-| **Authentication** | User registration & login with bcrypt password hashing and token-based sessions |
-| **Video Calling** | Peer-to-peer video/audio via WebRTC with STUN server (Google) |
-| **Multi-party Calls** | Mesh topology — each participant connects to every other participant |
-| **Screen Sharing** | Share entire screen or application window via `getDisplayMedia` API |
-| **Real-time Chat** | In-call text messaging broadcast to all room participants via Socket.IO |
-| **Meeting History** | Persistent log of all meetings a user has joined (stored in MongoDB) |
-| **Unread Badge** | Live notification badge on chat icon showing unread message count |
-| **Responsive UI** | Fully responsive across desktop, tablet, and mobile breakpoints |
-| **Modern Design** | Dark glassmorphism theme with gradient accents and micro-animations |
+| | Feature | What it does |
+| :-: | :-- | :-- |
+| 🎥 | **Group video calls** | Multi-person calls in a mesh — every participant connects directly to every other one |
+| 🖥️ | **Screen sharing** | Share a screen or window in one click; the camera comes back automatically when sharing stops |
+| 🎙️ | **Instant mute / camera off** | Toggles swap tracks in place — no reconnection, the camera light really turns off |
+| 💬 | **Live chat** | In-call messages for everyone in the room; late joiners receive the recent history |
+| 🔔 | **Unread badge** | Chat icon shows how many messages you haven't read |
+| 👥 | **Participants panel** | Live list of everyone in the meeting, with names |
+| 🔐 | **Accounts** | Register and sign in; passwords stored as bcrypt hashes |
+| 🕒 | **Meeting history** | Every meeting you joined, with its code and date |
+| 🔗 | **Shareable links** | One click creates an unguessable meeting link |
+| 🚪 | **Clean exit** | Leaving closes every connection and releases camera and mic immediately |
+| 📱 | **Responsive UI** | Dark glass-style design across desktop, tablet and mobile |
 
----
+<a id="numbers"></a>
 
-## 🛠 Tech Stack
+## 📊 By the numbers
 
-### Frontend
+<div align="center">
+
+<img src="https://img.shields.io/badge/PEER_LINKS_%40_6_USERS-15-7F77DD?style=for-the-badge&labelColor=1a1328" alt="15 links"/>
+<img src="https://img.shields.io/badge/ONE--WAY_STREAMS_%40_6_USERS-30-7F77DD?style=for-the-badge&labelColor=1a1328" alt="30 streams"/>
+<img src="https://img.shields.io/badge/RE--OFFERS_PER_TOGGLE-0-1D9E75?style=for-the-badge&labelColor=1a1328" alt="0 re-offers"/>
+<br/>
+<img src="https://img.shields.io/badge/POSSIBLE_MEETING_CODES-~2.8_TRILLION-D85A30?style=for-the-badge&labelColor=1a1328" alt="2.8 trillion codes"/>
+<img src="https://img.shields.io/badge/PERMISSION_PROMPTS-3_%E2%86%92_1-D85A30?style=for-the-badge&labelColor=1a1328" alt="3 to 1 prompts"/>
+<br/>
+<img src="https://img.shields.io/badge/CHAT-1%2C000_chars_%C2%B7_200_msgs_%2F_room-D4537E?style=for-the-badge&labelColor=1a1328" alt="chat limits"/>
+<img src="https://img.shields.io/badge/RELAY_CONFIG_CACHE-10_min-378ADD?style=for-the-badge&labelColor=1a1328" alt="10 min cache"/>
+<img src="https://img.shields.io/badge/IMPROVEMENTS_SHIPPED-13-1D9E75?style=for-the-badge&labelColor=1a1328" alt="13 improvements"/>
+
+</div>
+
+| Metric | Value | Where it comes from |
+| :-- | :-- | :-- |
+| Peer connections in a 6-person call | **15** (6 × 5 ÷ 2) — 30 one-way streams | mesh topology math |
+| Renegotiations when camera / screen changes | **0** | tested with a real WebRTC engine (3-person call, 5/5 runs connected) |
+| Possible meeting codes | **36⁸ ≈ 2.8 trillion** | `xxxx-xxxx`, 36 characters, cryptographic randomness |
+| Camera / mic permission calls on join | **3 → 1** | single `getUserMedia` request |
+| Chat limits | **1,000** chars per message · last **200** messages per room | deleted when the room empties |
+| Password hashing | bcrypt, **10** salt rounds | `user.controller.js` |
+| Session token | **20** random bytes (hex) | `crypto.randomBytes` |
+| Request body limit | **40 KB** | Express JSON parser |
+
+<a id="stack"></a>
+
+## 🧰 Tech stack
+
+<div align="center">
+<img src="https://skillicons.dev/icons?i=react,vite,materialui,js,nodejs,express,mongodb,vercel,git&theme=dark" alt="Tech icons"/>
+</div>
+
+| 🎨 Frontend | ⚡ Realtime | ⚙️ Backend | ☁️ Deploy |
+| :-- | :-- | :-- | :-- |
+| React 19 · Vite 7 · React Router 7 · Material UI 7 · Emotion · Axios · CSS Modules | WebRTC (browser API) · Socket.IO client + server · STUN / TURN relay | Node.js · Express 5 · Mongoose 8 · MongoDB Atlas · bcrypt · dotenv · CORS · http-status | Vercel (frontend) · Render (backend) · MongoDB Atlas · Vercel Speed Insights |
+
+<details>
+<summary>🎨 <b>Frontend — every library and why</b></summary>
+
+<br/>
+
 | Technology | Purpose |
-|---|---|
-| **React 19** | Component-based UI library |
-| **Vite 7** | Build tool & dev server with HMR (Hot Module Replacement) |
-| **React Router DOM v7** | Client-side routing & navigation |
-| **Material UI (MUI) v7** | Pre-built UI components (TextField, Button, Badge, IconButton, Snackbar) |
-| **Emotion** | CSS-in-JS engine used by MUI (`@emotion/react`, `@emotion/styled`) |
-| **Axios** | Promise-based HTTP client for REST API calls |
-| **Socket.IO Client** | WebSocket client for real-time bidirectional communication |
-| **WebRTC (Browser API)** | Peer-to-peer media streaming (video, audio, screen share) |
-| **CSS Modules** | Scoped CSS for the video meeting component |
-| **Vanilla CSS** | Global styles for all other pages |
-| **Vercel Speed Insights** | Performance monitoring in production |
+| :-- | :-- |
+| **React 19** | Component-based UI |
+| **Vite 7** | Build tool + dev server with hot reload |
+| **React Router DOM 7** | Client-side routing (`/`, `/auth`, `/home`, `/history`, `/:meetingCode`) |
+| **Material UI 7** | Buttons, inputs, badges, icon buttons, snackbars |
+| **Emotion** | CSS-in-JS engine used by MUI |
+| **Axios** | HTTP client for the REST API |
+| **Socket.IO Client** | Real-time channel for signaling and chat |
+| **WebRTC** | Peer-to-peer video, audio and screen share |
+| **CSS Modules** | Scoped styles for the meeting room |
+| **Vercel Speed Insights** | Production performance monitoring |
+</details>
 
-### Backend
+<details>
+<summary>⚙️ <b>Backend — every library and why</b></summary>
+
+<br/>
+
 | Technology | Purpose |
-|---|---|
-| **Node.js** | JavaScript runtime for server-side logic |
-| **Express 5** | Web framework for REST API routing & middleware |
-| **Socket.IO** | WebSocket server for real-time signaling & chat |
-| **MongoDB Atlas** | Cloud-hosted NoSQL database |
-| **Mongoose 8** | ODM (Object Data Modeling) for MongoDB schema & queries |
-| **bcrypt** | Password hashing with salt rounds (10 rounds) |
-| **crypto** | Node.js built-in module for generating random session tokens |
-| **dotenv** | Environment variable management from `.env` file |
-| **CORS** | Cross-Origin Resource Sharing middleware |
-| **http-status** | HTTP status code constants for clean response handling |
-| **nodemon** | Auto-restart dev server on file changes |
+| :-- | :-- |
+| **Node.js** | JavaScript runtime |
+| **Express 5** | REST routing and middleware |
+| **Socket.IO** | Rooms, signaling relay and chat broadcast |
+| **MongoDB Atlas + Mongoose 8** | Users and meeting history |
+| **bcrypt** | Password hashing (10 salt rounds) |
+| **crypto** (built-in) | Random session tokens |
+| **dotenv** | Environment variables from `.env` |
+| **CORS** | Cross-origin requests from the frontend |
+| **http-status** | Readable HTTP status constants |
+| **nodemon** | Auto-restart in development |
+</details>
 
----
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,50:D4537E,100:7F77DD&height=3&section=header" width="100%" alt=""/>
 
-## 🏗 Architecture Overview
+<a id="architecture"></a>
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                      CLIENT (React + Vite)               │
-│                                                          │
-│  Landing ──► Auth ──► Home ──► Video Meeting Room        │
-│                                   │                      │
-│              ┌────────────────────┼──────────────┐       │
-│              │  WebRTC Peer       │  Socket.IO   │       │
-│              │  Connections       │  Client      │       │
-│              │  (P2P Media)       │  (Signaling  │       │
-│              │                    │   + Chat)    │       │
-│              └────────┬───────────┼──────────────┘       │
-└───────────────────────│───────────│───────────────────────┘
-                        │           │
-            Media Streams (P2P)     │ WebSocket
-                        │           │
-                        │    ┌──────▼──────────────────────┐
-                        │    │   SERVER (Node + Express)    │
-                        │    │                              │
-                        │    │  REST API ◄──► MongoDB Atlas │
-                        │    │  (Auth, History)             │
-                        │    │                              │
-                        │    │  Socket.IO Server            │
-                        │    │  (Signaling + Chat Relay)    │
-                        │    └─────────────────────────────┘
-                        │
-              ┌─────────▼─────────┐
-              │  STUN Server      │
-              │  (Google Public)  │
-              │  stun.l.google.   │
-              │  com:19302        │
-              └───────────────────┘
+## 🏗️ Architecture (high level)
+
+```mermaid
+flowchart LR
+    U(("🧑 Users")):::user --> FE["⚛️ React app<br/>Vercel"]:::fe
+    FE -- "HTTPS · REST" --> API["⚙️ REST API<br/>accounts · history"]:::api
+    FE <-- "WebSocket" --> SIG["📡 Signaling<br/>rooms · chat · handshake"]:::sig
+    API --> DB[("🍃 MongoDB")]:::db
+    FE <== "🎥 video + audio · peer-to-peer" ==> P["👥 Other participants"]:::peer
+    FE -. "only if a direct path is blocked" .-> R["🛰️ Relay (TURN)"]:::relay
+    classDef user fill:#1a1328,stroke:#D4537E,stroke-width:2px,color:#fff
+    classDef fe fill:#26215C,stroke:#7F77DD,stroke-width:2px,color:#EEEDFE
+    classDef api fill:#04342C,stroke:#1D9E75,stroke-width:2px,color:#E1F5EE
+    classDef sig fill:#412402,stroke:#EF9F27,stroke-width:2px,color:#FAEEDA
+    classDef db fill:#4A1B0C,stroke:#D85A30,stroke-width:2px,color:#FAECE7
+    classDef peer fill:#4B1528,stroke:#D4537E,stroke-width:2px,color:#FBEAF0
+    classDef relay fill:#042C53,stroke:#378ADD,stroke-width:2px,color:#E6F1FB
 ```
 
-**Key Architectural Decisions:**
-- **Mesh Topology** for WebRTC: Every peer connects directly to every other peer. Suitable for small-to-medium group calls (2–6 participants).
-- **Socket.IO as Signaling Server**: Handles SDP offer/answer exchange and ICE candidate relay — not for media transfer.
-- **Token-based Authentication**: No JWT — uses `crypto.randomBytes()` to generate a random hex token stored in the database.
-- **Monorepo Structure**: Frontend and backend live in the same repository with a shared `.env` file at the root.
+**Key decisions**
 
----
+- 🕸️ **Mesh topology** — every peer connects directly to every other peer: lowest latency and no media-server cost; best for small groups (2–6 people).
+- 📡 **Socket.IO only for signaling and chat** — it introduces peers and relays their handshake; media never passes through the server.
+- 🛰️ **Relay only as a fallback** — most calls connect directly; a TURN relay is used only when firewalls block a direct path. Its configuration is served by the backend, never hard-coded in the frontend.
+- 🔑 **Opaque session tokens** — a random token stored in MongoDB (not JWT), so a new login replaces the old session.
+- 📦 **Monorepo** — frontend and backend in one repository, one root `.env` for the backend.
 
-## 📁 Project Structure
+<a id="flow"></a>
 
+## 🔄 Application flow
+
+```mermaid
+flowchart LR
+    L["🏠 Landing<br/>/"]:::a --> A["🔐 Sign in / Register<br/>/auth"]:::b
+    L -- "New meeting" --> M
+    A --> H["🏡 Home<br/>/home"]:::c
+    H -- "enter code" --> LB["🎥 Lobby<br/>name + camera preview"]:::d
+    LB -- "Connect" --> M["🤝 Meeting<br/>/:meetingCode"]:::e
+    M -- "End call" --> H
+    H --> HI["🕒 History<br/>/history"]:::f
+    classDef a fill:#26215C,stroke:#7F77DD,color:#EEEDFE
+    classDef b fill:#04342C,stroke:#1D9E75,color:#E1F5EE
+    classDef c fill:#042C53,stroke:#378ADD,color:#E6F1FB
+    classDef d fill:#412402,stroke:#EF9F27,color:#FAEEDA
+    classDef e fill:#4A1B0C,stroke:#D85A30,color:#FAECE7
+    classDef f fill:#4B1528,stroke:#D4537E,color:#FBEAF0
 ```
-video-conferencing/
-├── .env                          # Environment variables (DB credentials)
-├── .gitignore
+
+### 🤝 What happens inside a call (plain language)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as 🟣 Alice's browser
+    participant S as 🟠 Signaling server
+    participant B as 🟢 Bob's browser
+    A->>A: one camera + mic permission prompt
+    A->>S: join meeting (code + name)
+    S-->>A: here's who is already in the room
+    S-->>B: Alice joined
+    A->>S: connection offer for Bob
+    S->>B: forward (only inside the same meeting)
+    B->>S: answer
+    S->>A: forward
+    A-->>B: network routes (ICE) exchanged the same way
+    Note over A,B: 🎥 video + audio now flow directly, browser to browser
+    A->>A: camera off → swap in a black track (no reconnection)
+    A->>S: leave
+    S-->>B: Alice left → her tile disappears
+```
+
+> If both browsers start the handshake at the same moment ("glare"), the **perfect negotiation** pattern decides which side backs off, so the call still connects.
+
+<details>
+<summary>🧭 <b>Step-by-step user journey</b></summary>
+
+<br/>
+
+1. **Landing (`/`)** — hero section; *New meeting* creates a secure random link, *Sign in / Register* goes to `/auth`.
+2. **Authentication (`/auth`)** — toggle between Sign in and Sign up. Register hashes the password with bcrypt; login returns a session token stored in the browser.
+3. **Home (`/home`, protected)** — enter a meeting code → it's saved to your history → you're taken to the meeting.
+4. **Lobby** — type your display name and check your camera preview, then *Connect*.
+5. **Meeting (`/:meetingCode`)** — peers connect automatically; controls for camera, mic, screen share, participants, chat and end call.
+6. **History (`/history`)** — every meeting you joined, with code and date.
+</details>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,50:D4537E,100:7F77DD&height=3&section=header" width="100%" alt=""/>
+
+<a id="work"></a>
+
+## 🛠️ Real work done
+
+Problems found by auditing the original code, fixed and tested:
+
+| # | Area | 🔴 Before | 🟢 After |
+| :-: | :-- | :-- | :-- |
+| 1 | **Secrets** | Relay (TURN) username and password hard-coded in frontend code | Served by the backend from environment variables, cached 10 min, safe fallback |
+| 2 | **Leaving a call** | Socket and peer connections stayed open — you lingered as a frozen tile | Every connection closed, socket disconnected, camera and mic released — also when the page is left |
+| 3 | **Server memory** | Every room's chat kept in RAM forever, no size limit | 1,000-char messages, last 200 per room, deleted when the room empties |
+| 4 | **Signal isolation** | Any socket could send handshake messages to anyone | Forwarded only between two people in the **same** meeting |
+| 5 | **Room identity** | Room = full browser URL (`?x=1` made a different room) | Room = the meeting code only |
+| 6 | **Camera / mic / screen toggles** | Full renegotiation with every peer on each toggle | `replaceTrack` swap — **0** renegotiations |
+| 7 | **Simultaneous offers** | Both sides offering at once could break the call | Perfect negotiation (polite / impolite peers + rollback) |
+| 8 | **Deprecated APIs** | `addStream` / `onaddstream` | `addTrack` / `ontrack` |
+| 9 | **Permissions** | 3 `getUserMedia` calls, 2 streams never stopped | 1 request, devices released correctly |
+| 10 | **Meeting codes** | `Math.random` (predictable) | `crypto.getRandomValues` — ~2.8 trillion codes |
+| 11 | **Early clicks** | Clicking *Connect* before allowing the camera left the call black; mic button did nothing | Call switches to the real camera and mic as soon as they're allowed |
+| 12 | **Early network routes** | Routes arriving before the offer were rejected and lost | Queued and applied right after the offer |
+| 13 | **Hygiene** | Junk packages (`i`, `npm`, server `socket.io` in frontend); chat names could be faked | Removed; sender name comes from the server |
+
+<a id="structure"></a>
+
+## 🗂️ Project structure
+
+```text
+video-call-webrtc/
+├── .env                              # backend environment variables (never committed)
 ├── README.md
+├── assets/                           # animated README graphics
 │
 ├── backend/
-│   ├── package.json              # Backend dependencies & scripts
+│   ├── package.json
 │   └── src/
-│       ├── app.js                # Express server entry point, MongoDB connection, Socket.IO init
+│       ├── app.js                    # Express + Socket.IO server, MongoDB connection, routes
 │       ├── controllers/
-│       │   ├── user.controller.js    # Auth logic: login, register, history CRUD
-│       │   └── socketManager.js      # Socket.IO event handlers (signaling, chat, room mgmt)
+│       │   ├── user.controller.js    # register, login, meeting history
+│       │   ├── socketManager.js      # rooms, signaling relay, chat, cleanup
+│       │   └── turn.controller.js    # relay (TURN) configuration for WebRTC
 │       ├── models/
-│       │   ├── user.model.js         # Mongoose User schema (name, username, password, token)
-│       │   └── meeting.model.js      # Mongoose Meeting schema (user_id, meetingCode, date)
+│       │   ├── user.model.js         # name, username, password hash, token
+│       │   └── meeting.model.js      # user, meeting code, date
 │       └── routes/
-│           └── users.routes.js       # REST API route definitions
+│           └── users.routes.js       # REST routes
 │
 └── frontend/
-    ├── package.json              # Frontend dependencies & scripts
-    ├── vite.config.js            # Vite build configuration
-    ├── index.html                # HTML entry point
-    ├── public/                   # Static assets (background.jpg, group.png)
+    ├── package.json · vite.config.js · index.html · vercel.json
+    ├── public/                       # background and illustration images
     └── src/
-        ├── main.jsx              # React DOM render entry point (StrictMode)
-        ├── App.jsx               # Root component: Router, AuthProvider, AppTheme, Routes
-        ├── App.css               # Global styles for all pages (landing, auth, home, history, lobby)
-        ├── index.css             # CSS reset (margin, padding, box-sizing)
-        ├── environment.js        # Server URL toggle (production vs localhost)
-        ├── contexts/
-        │   └── AuthContext.jsx   # React Context for auth state & API methods
-        ├── utils/
-        │   └── withAuth.jsx      # HOC (Higher-Order Component) for route protection
-        ├── shared-theme/
-        │   └── AppTheme.jsx      # MUI ThemeProvider with custom palette
+        ├── main.jsx · App.jsx        # entry point, router, auth provider, theme
+        ├── App.css · index.css       # global styles
+        ├── environment.js            # backend URL for dev / production
+        ├── contexts/AuthContext.jsx  # auth state + API calls
+        ├── utils/withAuth.jsx        # route-protection HOC
+        ├── shared-theme/             # MUI theme
         ├── pages/
-        │   ├── landing.jsx       # Public landing page
-        │   ├── authentication.jsx # Login/Register form
-        │   ├── home.jsx          # Dashboard: enter meeting code to join
-        │   ├── history.jsx       # View past meeting history
-        │   └── VideoMeet.jsx     # Core video meeting: WebRTC, Socket.IO, chat, controls
-        ├── styles/
-        │   └── videoComponent.module.css  # CSS Module for video meeting room
-        └── assets/
-            ├── logo.png          # App logo image
-            └── react.svg         # React logo
+        │   ├── landing.jsx           # landing page + secure "New meeting"
+        │   ├── authentication.jsx    # sign in / sign up
+        │   ├── home.jsx              # join a meeting
+        │   ├── history.jsx           # past meetings
+        │   └── VideoMeet.jsx         # the call engine: WebRTC, signaling, chat, controls
+        └── styles/                   # landing + meeting room styles (CSS Modules)
 ```
 
----
+<a id="frontend"></a>
 
-## 🔄 Application Flow
+## ⚛️ Frontend deep dive
 
-### User Journey (Step-by-Step)
+| Path | Page | Protected | Purpose |
+| :-- | :-- | :-: | :-- |
+| `/` | `landing.jsx` | — | Landing page, *New meeting* |
+| `/auth` | `authentication.jsx` | — | Sign in / Register |
+| `/home` | `home.jsx` | ✅ `withAuth` | Join a meeting by code |
+| `/history` | `history.jsx` | data needs a token | Past meetings |
+| `/:meetingCode` | `VideoMeet.jsx` | — | Lobby + meeting room |
 
-```
-1. Landing Page (/)
-   │  User sees hero section with "Get Started" CTA
-   │
-   ├──► "Sign In" / "Register" / "Get Started"
-   │
-2. Authentication Page (/auth)
-   │  Toggle between Sign In (formState=0) and Sign Up (formState=1)
-   │  ├── Register: POST /api/v1/users/register → bcrypt hash → save to MongoDB
-   │  └── Login: POST /api/v1/users/login → bcrypt compare → generate token → save to DB
-   │       └── Token stored in localStorage("token")
-   │
-3. Home Page (/home)  [Protected by withAuth HOC]
-   │  User enters a meeting code (any string) and clicks "Join"
-   │  ├── POST /api/v1/users/add_to_activity → saves meeting to history
-   │  └── Navigate to /:meetingCode
-   │
-4. Video Meeting Room (/:url)
-   │  ├── Lobby: Enter display name → click "Connect"
-   │  │   └── Camera preview shown via getUserMedia()
-   │  │
-   │  └── Meeting Room:
-   │      ├── Socket.IO connects → emits "join-call" with room URL
-   │      ├── WebRTC peer connections created for each participant
-   │      ├── SDP offer/answer exchanged via Socket.IO signaling
-   │      ├── ICE candidates exchanged for NAT traversal
-   │      ├── Media streams rendered in video elements
-   │      ├── Controls: Toggle video, audio, screen share, end call
-   │      └── Chat: Real-time messaging via Socket.IO broadcast
-   │
-5. History Page (/history)  [No auth guard — but data requires valid token]
-   │  GET /api/v1/users/get_all_activity?token=xxx
-   │  └── Displays all past meetings with code + date
-```
+<details>
+<summary>🎥 <b>How the call engine (<code>VideoMeet.jsx</code>) works</b></summary>
 
----
+<br/>
 
-## 🔗 WebRTC Signaling Flow
+1. **Mount** — one camera + mic request; if one device is blocked, the other still works.
+2. **Lobby** — name input and live camera preview.
+3. **Connect** — fetches relay configuration from the backend, opens the socket, joins the room named by the meeting code.
+4. **Peers** — one `RTCPeerConnection` per participant, kept in a React ref; each always sends **1 video + 1 audio track**.
+5. **Handshake** — perfect negotiation (polite / impolite), early network routes queued until the offer arrives.
+6. **Controls** — camera and screen share swap the outgoing video track with `replaceTrack`; mic toggles `track.enabled`; a black / silent placeholder is sent when a device is off.
+7. **Chat** — sent over the socket, unread badge when the panel is closed.
+8. **Cleanup** — `leaveCall()` closes peers, disconnects the socket and stops all tracks — on *End call* and whenever the page is left.
+</details>
 
-This is the most critical and interview-relevant section. WebRTC requires a signaling mechanism to exchange connection metadata before peers can communicate directly.
+<details>
+<summary>🧠 <b>State, auth and theming</b></summary>
 
-### Step-by-Step Peer Connection
+<br/>
 
-```
-Peer A (Joiner)                    Server (Socket.IO)                 Peer B (Existing)
-     │                                    │                                   │
-     │──── "join-call" (room URL) ───────►│                                   │
-     │                                    │──── "user-joined" (A.id, all) ───►│
-     │                                    │◄─── "user-joined" (A.id, all) ────│
-     │◄─── "user-joined" (A.id, all) ─────│                                   │
-     │                                    │                                   │
-     │  [Create RTCPeerConnection for B]  │  [Create RTCPeerConnection for A] │
-     │  [Add local stream to connection]  │  [Add local stream to connection] │
-     │                                    │                                   │
-     │── createOffer() ──►                │                                   │
-     │── setLocalDescription(offer) ──►   │                                   │
-     │── "signal" (B.id, {sdp: offer}) ──►│                                   │
-     │                                    │── "signal" (A.id, {sdp: offer}) ─►│
-     │                                    │                                   │
-     │                                    │  [setRemoteDescription(offer)]    │
-     │                                    │  [createAnswer()]                 │
-     │                                    │  [setLocalDescription(answer)]    │
-     │                                    │◄─ "signal" (A.id, {sdp: answer}) ─│
-     │◄── "signal" (B.id, {sdp: answer}) ─│                                   │
-     │                                    │                                   │
-     │  [setRemoteDescription(answer)]    │                                   │
-     │                                    │                                   │
-     │── "signal" (B.id, {ice: cand}) ───►│── "signal" (A.id, {ice: cand}) ─►│
-     │◄── "signal" (B.id, {ice: cand}) ───│◄─ "signal" (A.id, {ice: cand}) ──│
-     │                                    │                                   │
-     │◄══════════ Direct P2P Media Stream (Video/Audio) ═════════════════════►│
-```
+- **React Context (`AuthContext`)** — `handleLogin`, `handleRegister`, `addToUserHistory`, `getHistoryOfuser` for every page.
+- **localStorage** — keeps the session token.
+- **`useRef` vs `useState`** — peer connections, socket and media tracks live in refs (no re-render); UI state (tiles, chat, toggles) lives in state.
+- **`withAuth` HOC** — redirects to `/auth` when no token is present; wraps the Home page.
+- **MUI theme** — custom palette through `ThemeProvider`; the dark look comes from custom CSS.
+</details>
 
-### Key WebRTC Concepts Used
+<a id="backend"></a>
 
-| Concept | Implementation |
-|---|---|
-| **RTCPeerConnection** | Created per remote peer in `connections{}` object |
-| **SDP (Session Description Protocol)** | Exchanged as JSON via Socket.IO `"signal"` event |
-| **ICE Candidates** | Gathered via `onicecandidate` callback, relayed through server |
-| **STUN Server** | Google's public STUN: `stun:stun.l.google.com:19302` — discovers public IP for NAT traversal |
-| **MediaStream API** | `getUserMedia()` for camera/mic, `getDisplayMedia()` for screen share |
-| **Black Silence Fallback** | When no media available, creates a black video canvas + silent audio track as placeholder |
-| **Mesh Topology** | Each peer has a direct connection to every other peer (N×(N-1)/2 connections) |
+## ⚙️ Backend deep dive
 
----
+| Part | Responsibility |
+| :-- | :-- |
+| `app.js` | Loads `.env`, sets up CORS and a 40 KB JSON limit, mounts REST routes and the relay-config route, attaches Socket.IO, connects to MongoDB, then starts listening |
+| `socketManager.js` | In-memory rooms: `connections` (code → sockets), `roomOf` (socket → code, O(1)), `messages` (capped chat), names; cleans everything up when a room empties |
+| `user.controller.js` | Register, login, add to history, get history |
+| `turn.controller.js` | Returns STUN / TURN servers from the provider using a server-side key; cached 10 min; falls back to public STUN |
 
-## ⚙ Backend Deep Dive
+### 📨 Realtime events
 
-### Entry Point: `app.js`
-
-1. Loads environment variables from root `.env` via `dotenv`
-2. Creates Express app with CORS, JSON body parser (40KB limit)
-3. Creates HTTP server and attaches Socket.IO with `connectToSocket()`
-4. Mounts REST routes at `/api/v1/users`
-5. Connects to MongoDB Atlas using connection string from env vars
-6. Starts server on port 8080
-
-### Socket Manager: `socketManager.js`
-
-Manages three in-memory data structures:
-- **`connections{}`**: Maps room URL → array of socket IDs (tracks who is in which room)
-- **`messages{}`**: Maps room URL → array of chat messages (persists chat for late joiners)
-- **`timeOnline{}`**: Maps socket ID → connection timestamp (tracks session duration)
-
-**Events handled:**
 | Event | Direction | Purpose |
-|---|---|---|
-| `join-call` | Client → Server | Add socket to room, notify all peers, send existing chat history |
-| `signal` | Client → Server → Client | Relay SDP/ICE to target peer |
-| `chat-message` | Client → Server → All Clients | Broadcast chat message to room |
-| `disconnect` | Automatic | Remove socket from room, notify peers, cleanup |
+| :-- | :-- | :-- |
+| `join-call` | client → server | Join a room by meeting code and name; receive recent chat |
+| `user-joined` | server → room | Someone joined (with the current member list) |
+| `signal` | client → server → client | Handshake and network routes — only within the same meeting |
+| `chat-message` | client → server → room | Chat (≤ 1,000 chars; sender name set by the server) |
+| `participants` | server → room | Updated participant list |
+| `user-left` | server → room | Someone left — remove their tile |
 
-### User Controller: `user.controller.js`
+### 📡 REST API
 
-| Function | Method | Endpoint | Logic |
-|---|---|---|---|
-| `register` | POST | `/register` | Validate fields → check duplicate username → hash password (bcrypt, 10 rounds) → save to DB |
-| `login` | POST | `/login` | Find user → bcrypt.compare password → generate 20-byte hex token → save token → return token |
-| `addToHistory` | POST | `/add_to_activity` | Find user by token → create Meeting document → save |
-| `getuserHistory` | GET | `/get_all_activity` | Find user by token → find all meetings by username → return |
+| Method | Endpoint | Body / query | Purpose |
+| :-- | :-- | :-- | :-- |
+| `POST` | `/api/v1/users/register` | `name, username, password` | Create an account |
+| `POST` | `/api/v1/users/login` | `username, password` | Sign in → session token |
+| `POST` | `/api/v1/users/add_to_activity` | `token, meeting_code` | Save a meeting to history |
+| `GET` | `/api/v1/users/get_all_activity` | `token` | List past meetings |
+| `GET` | `/api/v1/ice-servers` | — | Relay configuration for WebRTC |
 
----
+<details>
+<summary>🗄️ <b>Database schema</b></summary>
 
-## 🖥 Frontend Deep Dive
-
-### Routing (`App.jsx`)
-
-| Path | Component | Protected | Description |
-|---|---|---|---|
-| `/` | `LandingPage` | No | Public marketing/landing page |
-| `/auth` | `AuthenticationPage` | No | Login & registration form |
-| `/home` | `HomeComponent` | **Yes** (`withAuth`) | Dashboard to join meetings |
-| `/history` | `History` | No (data protected) | View past meeting history |
-| `/:url` | `VideoMeetComponent` | No | Video meeting room (dynamic route) |
-
-### State Management
-
-- **React Context API** (`AuthContext`): Provides `handleLogin`, `handleRegister`, `addToUserHistory`, `getHistoryOfuser` to all child components
-- **localStorage**: Stores authentication token (`"token"` key)
-- **Component-level `useState`**: Used extensively for form state, media toggles, chat messages, video streams
-
-### Higher-Order Component: `withAuth`
+<br/>
 
 ```javascript
-// Pattern: HOC (Higher-Order Component) for route protection
-const withAuth = (WrappedComponent) => {
-    const AuthComponent = (props) => {
-        // Check localStorage for token
-        // If absent → redirect to /auth
-        // If present → render WrappedComponent
-    }
-    return AuthComponent;
-}
-```
-
-This is a classic React pattern for protecting routes without middleware. It wraps `HomeComponent` to ensure only authenticated users access the dashboard.
-
-### MUI Theming (`AppTheme.jsx`)
-
-Uses MUI's `createTheme` + `ThemeProvider` to define a custom palette:
-- Primary: `#1976d2` (blue)
-- Secondary: `#dc004e` (pink)
-- Mode: `light` (default)
-
-The dark theme is achieved through custom CSS rather than MUI's dark mode.
-
-### Video Meeting Component (`VideoMeet.jsx`)
-
-The most complex component. Key lifecycle:
-
-1. **Mount**: `getPermissions()` → requests camera, mic, screen share permissions
-2. **Lobby**: Shows username input + video preview
-3. **Connect**: `connect()` → `getMedia()` → `connectToSocketServer()`
-4. **Socket Events**: Listens for `user-joined`, `user-left`, `signal`, `chat-message`
-5. **Peer Connections**: Creates `RTCPeerConnection` for each peer, exchanges SDP/ICE
-6. **Media Controls**: Toggle video/audio/screen with state → `useEffect` triggers `getUserMedia`/`getDisplayMedia`
-7. **Chat**: Sends via socket, receives via listener, displays with unread badge
-8. **Cleanup**: `handleEndCall()` stops all tracks, navigates to `/home`
-
----
-
-## 🗄 Database Schema
-
-### User Collection
-```javascript
+// User
 {
-  name:     { type: String, required: true },          // Display name
-  username: { type: String, required: true, unique: true }, // Login identifier
-  password: { type: String, required: true },          // bcrypt hashed
-  token:    { type: String }                           // Session token (nullable)
+  name:     { type: String, required: true },               // display name
+  username: { type: String, required: true, unique: true }, // login id
+  password: { type: String, required: true },               // bcrypt hash
+  token:    { type: String }                                // current session token
 }
-```
 
-### Meeting Collection
-```javascript
+// Meeting
 {
-  user_id:     { type: String },                       // Username of the participant
-  meetingCode: { type: String, required: true },       // Room identifier
-  date:        { type: Date, default: Date.now, required: true } // Auto-timestamped
+  user_id:     { type: String },                            // username
+  meetingCode: { type: String, required: true },
+  date:        { type: Date, default: Date.now, required: true }
 }
 ```
+</details>
 
----
+<details>
+<summary>🔐 <b>Authentication flow</b></summary>
 
-## 📡 API Endpoints
+<br/>
 
-| Method | Endpoint | Body / Query | Response | Description |
-|---|---|---|---|---|
-| POST | `/api/v1/users/register` | `{ name, username, password }` | `201 Created` | Register new user |
-| POST | `/api/v1/users/login` | `{ username, password }` | `200 OK` + `{ token }` | Authenticate user |
-| POST | `/api/v1/users/add_to_activity` | `{ token, meeting_code }` | `201 Created` | Log meeting to history |
-| GET | `/api/v1/users/get_all_activity` | `?token=xxx` | `200 OK` + `[meetings]` | Fetch user's meeting history |
-
----
-
-## 📨 Socket.IO Events
-
-| Event | Direction | Payload | Purpose |
-|---|---|---|---|
-| `join-call` | Client → Server | `path` (room URL) | Join a meeting room |
-| `user-joined` | Server → All Clients | `socketId, clientsList` | Notify room of new participant |
-| `user-left` | Server → All Clients | `socketId` | Notify room of departure |
-| `signal` | Client ↔ Server ↔ Client | `toId, message` (JSON SDP/ICE) | WebRTC signaling relay |
-| `chat-message` | Client → Server → All | `data, sender` | Broadcast chat message |
-
----
-
-## 🔐 Authentication Mechanism
-
-```
-Register Flow:
-Client → POST /register { name, username, password }
-Server → Check if username exists → bcrypt.hash(password, 10) → Save User → 201
-
-Login Flow:
-Client → POST /login { username, password }
-Server → Find user → bcrypt.compare(password, hash) → crypto.randomBytes(20).toString('hex')
-       → Save token to user document → Return { token }
-Client → localStorage.setItem("token", token) → Navigate to /home
-
-Protected Route Access:
-withAuth HOC → Check localStorage.getItem("token") → If null → redirect /auth
-
-API Authorization:
-Client sends token in request body/query → Server finds user by token → Performs action
+```text
+Register  →  username free?  →  bcrypt.hash(password, 10)  →  save user  →  201
+Login     →  find user  →  bcrypt.compare  →  crypto.randomBytes(20) token  →  save on user  →  return token
+Client    →  store token  →  open /home (withAuth checks the token)
+History   →  token sent with the request  →  server finds the user  →  returns meetings
 ```
 
-**Note**: This is NOT JWT-based. The token is a random string stored in the database. Each login generates a new token, effectively invalidating previous sessions.
+Not JWT: the token is a random string stored in the database, so each new login replaces the previous session.
+</details>
 
----
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,50:D4537E,100:7F77DD&height=3&section=header" width="100%" alt=""/>
 
-## 🌍 Environment Configuration
+<a id="tradeoffs"></a>
 
-### `.env` (Root level — shared by backend)
-```env
-DB_USER=<mongodb_atlas_username>
-DB_PASSWORD=<mongodb_atlas_password>
-DB_CLUSTER=<cluster_hostname>   # e.g., cluster0.xxxxx.mongodb.net
-DB_NAME=<database_name>
-```
+## ⚖️ Trade-offs
 
-### `frontend/src/environment.js`
-```javascript
-let IS_PROD = false;  // Toggle for production/development
+| 🟢 Chose | ⚪ Over | ✅ Gained | ⚠️ Gave up |
+| :-- | :-- | :-- | :-- |
+| **Peer-to-peer mesh** | Media server (SFU / MCU) | Lowest latency, ₹0 media infrastructure | Each person uploads N−1 streams → best for ~4–6 people |
+| **Socket.IO** | Raw WebSocket | Rooms, auto-reconnect, long-polling fallback | Heavier protocol |
+| **Chat over the socket** | WebRTC DataChannel | History for late joiners, simple broadcast | Server sees chat (TLS only, not end-to-end) |
+| **`replaceTrack` + placeholders** | Renegotiate on every toggle | Instant toggles, no glare | Screen-share audio not sent |
+| **Perfect negotiation** | "Newcomer always offers" | Survives simultaneous offers | Slightly more state per peer |
+| **Relay config from backend** | Hard-coded credentials | No secrets in frontend, easy rotation | One extra request when joining |
+| **Opaque DB token** | JWT | Instant revocation on re-login | DB lookup per request |
+| **In-memory rooms** | Redis | Zero infrastructure | Single server instance; restart ends calls |
 
-const server = IS_PROD
-  ? "https://your-production-url.com"
-  : "http://localhost:8080";
-```
+<details>
+<summary>🚧 <b>Known limitations (honest)</b></summary>
 
----
+<br/>
 
-## 🚀 How to Run
+- Mesh topology is practical for small groups only.
+- Rooms live in server memory: one backend instance, and a restart ends active calls.
+- Session tokens have no expiry and history requests send the token as a query parameter.
+- Socket connections and the history page aren't guarded by authentication.
+- No automatic reconnection (ICE restart) if the network changes mid-call.
+</details>
 
-### Prerequisites
-- **Node.js** v18+ installed
-- **MongoDB Atlas** account with a cluster and database user configured
-- **Git** (optional)
+<a id="roadmap"></a>
 
-### 1. Clone & Configure
+## 🗺️ Roadmap
+
+- [ ] 🧩 **SFU media server** (mediasoup / LiveKit) + simulcast for 10+ participants
+- [ ] 📝 **Live captions + AI meeting summary** (speech-to-text → summary and action items)
+- [ ] 🗣️ **Active speaker highlight** using audio levels
+- [ ] 📶 **Connection-quality indicator + auto-reconnect** (`getStats()`, ICE restart)
+- [ ] 👑 **Host controls & waiting room** — admit, mute, remove, lock room
+- [ ] 🌫️ **Background blur** (in-browser segmentation)
+- [ ] ⏺️ **Recording** with `MediaRecorder`
+- [ ] 🔑 **Token expiry + authenticated sockets**
+- [ ] 🧪 **Automated tests** — socket server tests and browser call tests
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:FF9839,50:D4537E,100:7F77DD&height=3&section=header" width="100%" alt=""/>
+
+<a id="run"></a>
+
+## 🚀 Run it locally
+
+<details>
+<summary>⚙️ <b>Setup (≈ 10 minutes)</b></summary>
+
+<br/>
+
+**Needs:** Node.js 18+, a MongoDB Atlas database, a TURN relay account (optional — calls fall back to STUN).
+
 ```bash
-git clone <repo-url>
-cd "video conferencing"
+git clone https://github.com/Aditya09Goyal/Video-Call-WebRTC.git
+cd Video-Call-WebRTC
 ```
 
-Create a `.env` file in the project root:
+Create **`.env` in the project root** (next to this README):
+
 ```env
 DB_USER=your_db_username
 DB_PASSWORD=your_db_password
-DB_CLUSTER=cluster0.xxxxx.mongodb.net
-DB_NAME=myDatabase
+DB_CLUSTER=your_cluster_host/your_db_name
+METERED_DOMAIN=your_relay_domain        # optional
+METERED_API_KEY=your_relay_api_key      # optional, backend only
+# DNS_SERVERS=8.8.8.8,1.1.1.1           # optional: only if MongoDB DNS lookups time out locally
 ```
 
-### 2. Start Backend
+**Backend**
+
 ```bash
 cd backend
 npm install
-node src/app.js        # or: npx nodemon src/app.js
+npm run dev          # http://localhost:8080
 ```
-Backend runs on **http://localhost:8080**
 
-### 3. Start Frontend
+**Frontend** (new terminal)
+
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev          # http://localhost:5173
 ```
-Frontend runs on **http://localhost:5173**
 
-### 4. Open in Browser
-Navigate to `http://localhost:5173` — you'll see the landing page.
+Open the app in two windows (one normal, one private), join the same meeting link, and start talking.
+</details>
 
-> **Note (Windows)**: If you get a PowerShell execution policy error, run:
-> ```powershell
-> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-> ```
+<details>
+<summary>☁️ <b>Deployment</b></summary>
 
----
+<br/>
 
-## 🌐 Deployment
+| Part | Platform | Notes |
+| :-- | :-- | :-- |
+| ⚛️ Frontend | Vercel | Vite build; set the production backend URL in `environment.js` |
+| ⚙️ Backend | Render | Add the same variables as `.env` in the dashboard |
+| 🍃 Database | MongoDB Atlas | Allow the backend's network access |
 
-- **Frontend**: Deployable on **Vercel** (Vite builds to static files). Toggle `IS_PROD = true` in `environment.js` and set the production server URL.
-- **Backend**: Deployable on **Render**, **Railway**, or any Node.js hosting. Set environment variables on the platform.
-- The project includes `@vercel/speed-insights` for production performance monitoring.
-- Backend supports `pm2` for process management in production (`npm run prod`).
+Push to `main` → both redeploy automatically.
+</details>
 
----
+## 👤 Author
 
-<!-- ## 🎓 Key Concepts & Interview Topics
+**Aditya Goyal** — designed, built and maintains this project solo · [@Aditya09Goyal](https://github.com/Aditya09Goyal)
 
-### WebRTC
-- **What is WebRTC?** Browser API for peer-to-peer real-time communication (video, audio, data) without plugins.
-- **What is SDP?** Session Description Protocol — describes media capabilities, codecs, and connection info exchanged between peers.
-- **What is ICE?** Interactive Connectivity Establishment — framework for finding the best path between peers (direct, STUN, TURN).
-- **STUN vs TURN**: STUN discovers public IP (lightweight). TURN relays media through server when direct connection fails (bandwidth-heavy).
-- **Mesh vs SFU vs MCU**: This project uses **Mesh** (peer-to-peer). SFU (Selective Forwarding Unit) routes streams through a server. MCU mixes streams server-side.
-- **Why does mesh not scale?** Each peer needs N-1 upload streams. For 6 users = 30 connections total. SFU solves this.
-- **`onicecandidate`**: Fired when the ICE agent finds a new candidate. Must be relayed to the remote peer.
-- **`onaddstream`** (deprecated but used): Fired when a remote peer adds a media stream to the connection.
-- **Offer/Answer Model**: Caller creates offer → sets local description → sends to callee → callee sets remote description → creates answer → sends back.
+<div align="center">
 
-### Socket.IO
-- **Why Socket.IO over raw WebSockets?** Automatic reconnection, fallback to HTTP long-polling, room/namespace support, event-based API.
-- **Why not use Socket.IO for media?** WebSocket is TCP-based (reliable but slow). WebRTC uses UDP (fast, tolerates packet loss) — critical for real-time media.
-- **Rooms**: This project uses the meeting URL as a room identifier in the `connections{}` map.
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:1D9E75,20:378ADD,40:7F77DD,60:D4537E,80:ff5e62,100:FF9839&height=6&section=footer" width="100%" alt=""/>
 
-### React Patterns
-- **Context API**: Global state without prop drilling. Used for auth state across all components.
-- **Higher-Order Components (HOC)**: `withAuth` wraps components to add auth checking. Classic pattern before hooks.
-- **Controlled Components**: All form inputs use `value` + `onChange` pattern (controlled by React state).
-- **`useRef`**: Used for Socket.IO ref, video elements, and mutable values that shouldn't trigger re-renders.
-- **`useEffect` with dependencies**: Media toggles (`audio`, `video`, `screen`) trigger effects to call `getUserMedia`/`getDisplayMedia`.
-- **CSS Modules**: `videoComponent.module.css` provides scoped class names (e.g., `styles.meetVideoContainer`) to avoid global CSS collisions.
-
-### Node.js / Express
-- **ES Modules**: Backend uses `"type": "module"` with `import/export` syntax instead of CommonJS `require()`.
-- **`__dirname` in ES Modules**: Not available natively — reconstructed using `fileURLToPath(import.meta.url)`.
-- **Middleware chain**: `cors()` → `express.json()` → `express.urlencoded()` → route handlers.
-- **MVC Pattern**: Models (Mongoose schemas) → Controllers (business logic) → Routes (endpoint mapping).
-
-### MongoDB / Mongoose
-- **ODM**: Mongoose maps JavaScript objects to MongoDB documents with schema validation.
-- **`unique: true`**: Enforces uniqueness at the database level (creates a unique index on `username`).
-- **`default: Date.now`**: Auto-populates the `date` field when a meeting document is created.
-- **Atlas Connection String**: Uses SRV record format (`mongodb+srv://`) for DNS-based cluster discovery.
-
-### Security
-- **bcrypt**: Adaptive hashing with salt. 10 rounds = ~10 hashes/sec (intentionally slow to resist brute force).
-- **crypto.randomBytes**: Cryptographically secure random token generation (20 bytes = 40 hex chars).
-- **CORS**: Configured with `origin: "*"` (permissive — should be restricted in production).
-- **Input Validation**: Server-side checks for required fields before database operations.
-- **No JWT**: Simpler token approach — token is stored in DB and looked up per request.
-
-### CSS / Design
-- **Glassmorphism**: Semi-transparent backgrounds + `backdrop-filter: blur()` for frosted glass effect.
-- **CSS `clamp()`**: Fluid typography that scales between a min and max value based on viewport width.
-- **CSS Modules vs Global CSS**: Modules for component-scoped styles (video room), global CSS for page layouts.
-- **`@keyframes`**: `fadeIn` and `slideInRight` entrance animations used across all pages.
-- **Media Queries**: Breakpoints at 968px (tablet), 768px/600px (mobile), 480px (small mobile).
-- **`transform: scaleX(-1)`**: Mirrors the local video for a natural selfie-cam experience.
-
-### Build Tooling
-- **Vite**: Uses native ES modules in development for instant HMR. Rollup for production bundling.
-- **nodemon**: Watches for file changes and auto-restarts the Node.js server during development.
-- **ESLint**: Configured with React hooks and React Refresh plugins for code quality.
-
----
-
-## 📋 Potential Interview Questions
-
-1. **Explain the complete flow from a user clicking "Join" to seeing remote video.**
-2. **What is the difference between STUN and TURN servers? Why do you only use STUN?**
-3. **Why can't you use Socket.IO for video streaming directly?**
-4. **What happens when a third user joins an existing 2-person call?**
-5. **How does the mesh topology work and what are its limitations?**
-6. **How is the authentication implemented? Why not JWT?**
-7. **What is the purpose of the `blackSilence()` function?**
-8. **How does screen sharing work under the hood?**
-9. **What is the role of ICE candidates in establishing a WebRTC connection?**
-10. **How would you scale this app to support 100+ participants?** (Answer: Replace mesh with SFU like mediasoup/Janus)
-11. **What is `onicecandidate` and why is it important?**
-12. **Explain the SDP offer/answer model.**
-13. **What is the purpose of `useRef` vs `useState` in the video component?**
-14. **How does the HOC pattern (`withAuth`) work for route protection?**
-15. **What is the Context API and how is it used here instead of Redux?**
-
----
-
-## 📄 License
-
-ISC
-
---- -->
-
-*Built with ❤️ using React, Node.js, WebRTC, and Socket.IO*
+</div>
