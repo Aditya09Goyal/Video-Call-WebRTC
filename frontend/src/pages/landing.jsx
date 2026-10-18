@@ -33,10 +33,12 @@ function CountUp({ to, pre, suf }) {
     return <>{pre}{n}{suf}</>;
 }
 
-const randomCode = () => {
-    const s = () => Math.random().toString(36).slice(2, 6);
-    return `${s()}-${s()}`;
-};
+// Meeting codes are the only "lock" on a room, so they must be unguessable:
+// crypto.getRandomValues is cryptographically secure, Math.random is not.
+const CODE_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+const randomPart = (n) =>
+    Array.from(crypto.getRandomValues(new Uint32Array(n)), (x) => CODE_CHARS[x % CODE_CHARS.length]).join("");
+const randomCode = () => `${randomPart(4)}-${randomPart(4)}`;
 
 export default function LandingPage() {
     const router = useNavigate();
